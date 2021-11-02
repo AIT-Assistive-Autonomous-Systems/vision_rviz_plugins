@@ -1,0 +1,8 @@
+<library path="vision_rviz_plugins">
+    <class name="vision_rviz_plugins/Detection3DArray" type="vision_rviz_plugins::Detection3DArrayDisplay" base_class_type="rviz_common::Display">
+        <description>
+            Display detection array as bounding boxes.
+        </description>
+        <message_type>vision_msgs/msg/Detection3DArray</message_type>
+    </class>
+</library>
