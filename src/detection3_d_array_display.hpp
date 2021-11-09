@@ -1,12 +1,11 @@
 #pragma once
 
 #include <memory>
-#include <vector>
+#include <list>
 #include <utility>
 #include "vision_msgs/msg/detection3_d_array.hpp"
-#include "rviz_rendering/objects/shape.hpp"
-#include "rviz_rendering/objects/covariance_visual.hpp"
 #include "rviz_common/message_filter_display.hpp"
+#include "detection_visual.hpp"
 
 namespace rviz_common
 {
@@ -45,8 +44,7 @@ private Q_SLOTS:
 private:
   void processMessage(vision_msgs::msg::Detection3DArray::ConstSharedPtr message) override;
 
-  std::vector<rviz_rendering::Shape> detections_;
-  std::vector<rviz_rendering::CovarianceVisual> covariances_;
+  std::list<DetectionVisual> detection_visuals_;
 
   rviz_common::properties::ColorProperty * color_property_;
   rviz_common::properties::FloatProperty * alpha_property_;

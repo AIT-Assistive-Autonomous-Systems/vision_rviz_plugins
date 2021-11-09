@@ -9,10 +9,11 @@ from geometry_msgs.msg import TransformStamped
 from vision_msgs.msg import Detection3DArray, Detection3D, ObjectHypothesisWithPose
 
 
-NO_OF_DETECTIONS = 1
+MAX_NO_OF_DETECTIONS = 3
+DETECTION_COUNT_PERIOD = 5.0
 TF_PUBLISH_PERIOD = 0.2
 TF_RANGE = 1.0
-DETECTION_PUBLISH_PERIOD = 0.5
+DETECTION_PUBLISH_PERIOD = 0.1
 POS_STDDEV = 0.5
 ROT_STDDEV = 0.05
 
@@ -50,8 +51,14 @@ class Detection3DArrayPublisher(Node):
     def _on_detections(self):
         msg = Detection3DArray()
         msg.header.frame_id = 'sensor'
-        msg.header.stamp = self.get_clock().now().to_msg()
-        for i in range(NO_OF_DETECTIONS):
+        t = self.get_clock().now()
+        msg.header.stamp = t.to_msg()
+
+        t_s = t.nanoseconds / CONVERSION_CONSTANT
+        timed_scale = math.sin(t_s / DETECTION_COUNT_PERIOD * math.tau)
+        # publish varying number of detections to test dis- and reappearing visuals
+        no_of_det = int(round(math.fabs(MAX_NO_OF_DETECTIONS * timed_scale)))
+        for i in range(no_of_det):
             d = Detection3D()
             d.id = f'd{i}'
             d.bbox.size.x = 1.0
@@ -60,7 +67,8 @@ class Detection3DArrayPublisher(Node):
             h = ObjectHypothesisWithPose()
             h.hypothesis.class_id = '1'
             h.hypothesis.score = 1.0
-            h.pose.pose.position.x = 5.0
+            h.pose.pose.position.x = math.cos(t_s) * i
+            h.pose.pose.position.y = math.sin(t_s) * i
             h.pose.covariance[COV_POS_X_IDX] = POS_STDDEV * POS_STDDEV
             h.pose.covariance[COV_POS_Y_IDX] = POS_STDDEV * POS_STDDEV
             h.pose.covariance[COV_POS_Z_IDX] = POS_STDDEV * POS_STDDEV

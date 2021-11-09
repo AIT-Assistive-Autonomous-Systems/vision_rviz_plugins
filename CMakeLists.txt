@@ -20,7 +20,8 @@ find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets)
 
 add_library(vision_rviz_plugins SHARED
   src/detection3_d_array_display.cpp
-  src/detection3_d_array_display.hpp)
+  src/detection3_d_array_display.hpp
+  src/detection_visual.cpp)
 
 set_property(TARGET vision_rviz_plugins PROPERTY AUTOMOC ON)
 
@@ -40,8 +41,6 @@ target_link_libraries(vision_rviz_plugins Qt5::Core Qt5::Gui Qt5::Widgets)
 target_compile_definitions(vision_rviz_plugins PRIVATE "VISION_RVIZ_PLUGINS_BUILDING_LIBRARY")
 target_compile_definitions(vision_rviz_plugins PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 
-pluginlib_export_plugin_description_file(rviz_common plugins_description.xml)
-
 install(
   DIRECTORY icons
   DESTINATION share/${PROJECT_NAME}
@@ -51,7 +50,6 @@ install(
   EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
 )
 
 if(BUILD_TESTING)
@@ -66,4 +64,5 @@ ament_export_targets(
   export_${PROJECT_NAME}
 )
 
+pluginlib_export_plugin_description_file(rviz_common plugins_description.xml)
 ament_package()
