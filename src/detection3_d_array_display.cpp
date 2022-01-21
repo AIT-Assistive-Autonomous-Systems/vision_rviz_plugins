@@ -23,6 +23,7 @@ namespace vision_rviz_plugins
 
 using vision_msgs::msg::Detection3DArray;
 using rviz_common::properties::StatusProperty;
+using rviz_rendering::Axes;
 using rviz_rendering::Shape;
 using rviz_rendering::CovarianceVisual;
 
@@ -38,6 +39,12 @@ Detection3DArrayDisplay::Detection3DArrayDisplay()
   alpha_property_->setMin(0);
   alpha_property_->setMax(1);
 
+  axes_length_property_ = new rviz_common::properties::FloatProperty(
+    "Axes Length", 1, "Length of each axis, in meters.", this, SLOT(updateAxisGeometry()));
+
+  axes_radius_property_ = new rviz_common::properties::FloatProperty(
+    "Axes Radius", 0.1f, "Radius of each axis, in meters.", this, SLOT(updateAxisGeometry()));
+
   covariance_property_ = new rviz_common::properties::CovarianceProperty(
     "Covariance", true, "Whether or not the covariances of the messages should be shown.",
     this, SLOT(updateCovariance()));
@@ -51,16 +58,14 @@ void Detection3DArrayDisplay::onInitialize()
   detection_visuals_.clear();
 }
 
-void Detection3DArrayDisplay::onEnable()
+void Detection3DArrayDisplay::updateAxisGeometry()
 {
-  MFDClass::onEnable();
-  // TODO visibility
-}
-
-void Detection3DArrayDisplay::onDisable()
-{
-  MFDClass::onDisable();
-  // TODO visibility
+  for (auto & visual : detection_visuals_) {
+    visual.axes().set(
+      axes_length_property_->getFloat(),
+      axes_radius_property_->getFloat());
+  }
+  context_->queueRender();
 }
 
 void Detection3DArrayDisplay::updateColorAndAlpha()
@@ -70,6 +75,7 @@ void Detection3DArrayDisplay::updateColorAndAlpha()
   for (auto & visual : detection_visuals_) {
     visual.bbox().setColor(color);
   }
+  context_->queueRender();
 }
 
 void Detection3DArrayDisplay::updateCovariance()
@@ -77,6 +83,7 @@ void Detection3DArrayDisplay::updateCovariance()
   for (auto & visual : detection_visuals_) {
     visual.covariance().updateUserData(covariance_property_->getUserData());
   }
+  context_->queueRender();
 }
 
 void Detection3DArrayDisplay::processMessage(Detection3DArray::ConstSharedPtr message)
@@ -146,6 +153,7 @@ void Detection3DArrayDisplay::processMessage(Detection3DArray::ConstSharedPtr me
 
   updateColorAndAlpha();
   updateCovariance();
+  updateAxisGeometry();
 }
 
 void Detection3DArrayDisplay::reset()

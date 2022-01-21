@@ -17,6 +17,7 @@ limitations under the License. */
 #include <memory>
 #include <OgreSceneNode.h>
 #include "vision_msgs/msg/detection3_d_array.hpp"
+#include "rviz_rendering/objects/axes.hpp"
 #include "rviz_rendering/objects/shape.hpp"
 #include "rviz_rendering/objects/covariance_visual.hpp"
 
@@ -30,6 +31,7 @@ private:
   Ogre::SceneNode * scene_node_;
 
   std::unique_ptr<rviz_rendering::Shape> bbox_;
+  std::unique_ptr<rviz_rendering::Axes> axes_;
   std::unique_ptr<rviz_rendering::CovarianceVisual> covariance_;
 
 public:
@@ -38,6 +40,8 @@ public:
   DetectionVisual(DetectionVisual&&) = delete;
 
   virtual ~DetectionVisual();
+
+  rviz_rendering::Axes & axes();
 
   rviz_rendering::Shape & bbox();
 

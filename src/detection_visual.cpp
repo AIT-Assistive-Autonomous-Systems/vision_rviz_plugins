@@ -19,7 +19,7 @@ limitations under the License. */
 
 namespace vision_rviz_plugins
 {
-
+using rviz_rendering::Axes;
 using rviz_rendering::Shape;
 using rviz_rendering::CovarianceVisual;
 
@@ -32,6 +32,9 @@ DetectionVisual::DetectionVisual(
   bbox_ = std::make_unique<Shape>(
     Shape::Type::Cube, scene_manager_,
     scene_node_->createChildSceneNode());
+  axes_ = std::make_unique<Axes>(
+    scene_manager_,
+    scene_node_->createChildSceneNode());
   covariance_ = std::make_unique<CovarianceVisual>(
     scene_manager_,
     scene_node_->createChildSceneNode());
@@ -42,6 +45,10 @@ DetectionVisual::~DetectionVisual()
   if (scene_node_) {
     parent_scene_node_->removeChild(scene_node_);
   }
+}
+
+rviz_rendering::Axes & DetectionVisual::axes() {
+  return *axes_;
 }
 
 rviz_rendering::Shape & DetectionVisual::bbox()

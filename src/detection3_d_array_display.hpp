@@ -47,11 +47,8 @@ public:
   void onInitialize() override;
   void reset() override;
 
-protected:
-  void onEnable() override;
-  void onDisable() override;
-
 private Q_SLOTS:
+  void updateAxisGeometry();
   void updateColorAndAlpha();
   void updateCovariance();
 
@@ -63,6 +60,8 @@ private:
   rviz_common::properties::ColorProperty * color_property_;
   rviz_common::properties::FloatProperty * alpha_property_;
   rviz_common::properties::CovarianceProperty * covariance_property_;
+  rviz_common::properties::FloatProperty * axes_length_property_;
+  rviz_common::properties::FloatProperty * axes_radius_property_;
 };
 
 }  // namespace vision_rviz_plugins
