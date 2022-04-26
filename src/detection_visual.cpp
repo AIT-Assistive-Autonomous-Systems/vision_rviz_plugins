@@ -1,4 +1,4 @@
-/* Copyright 2021 Austrian Institute of Technology GmbH
+/* Copyright 2022 Austrian Institute of Technology GmbH
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,14 +14,18 @@ limitations under the License. */
 
 #include "detection_visual.hpp"
 #include "rviz_common/msg_conversions.hpp"
+#include <rcpputils/asserts.hpp>
 #include <utility>
 #include <memory>
 
 namespace vision_rviz_plugins
 {
 using rviz_rendering::Axes;
+using rviz_rendering::MovableText;
 using rviz_rendering::Shape;
 using rviz_rendering::CovarianceVisual;
+
+const float ID_TEXT_OFFSET = 0.2f;
 
 DetectionVisual::DetectionVisual(
   Ogre::SceneManager * scene_manager,
@@ -35,6 +39,11 @@ DetectionVisual::DetectionVisual(
   axes_ = std::make_unique<Axes>(
     scene_manager_,
     scene_node_->createChildSceneNode());
+
+  id_text_ = std::make_unique<MovableText>("", "Liberation Sans", 0.2f);
+  id_text_->setTextAlignment(MovableText::H_CENTER, MovableText::V_CENTER);
+  scene_node_->attachObject(id_text_.get());
+
   covariance_ = std::make_unique<CovarianceVisual>(
     scene_manager_,
     scene_node_->createChildSceneNode());
@@ -47,7 +56,8 @@ DetectionVisual::~DetectionVisual()
   }
 }
 
-rviz_rendering::Axes & DetectionVisual::axes() {
+rviz_rendering::Axes & DetectionVisual::axes()
+{
   return *axes_;
 }
 
@@ -61,20 +71,52 @@ rviz_rendering::CovarianceVisual & DetectionVisual::covariance()
   return *covariance_;
 }
 
-void DetectionVisual::update(const vision_msgs::msg::Detection3D & detection)
+void DetectionVisual::setColor(Ogre::ColourValue color)
 {
+  bbox_->setColor(color);
+  color.a = 1.0; // force text alpha to opaque
+  id_text_->setColor(color);
+}
+
+void DetectionVisual::setShowId(bool show)
+{
+  if (id_text_->getCaption().empty()) {
+    show = false;
+  }
+  id_text_->setVisible(show);
+}
+
+void DetectionVisual::update(
+  const vision_msgs::msg::Detection3D & detection,
+  Ogre::Vector3 height_axis)
+{
+  rcpputils::assert_true(!detection.results.empty(), "detection does not contain results");
   const auto & result = detection.results.front();
+
   scene_node_->setPosition(rviz_common::pointMsgToOgre(result.pose.pose.position));
   scene_node_->setOrientation(rviz_common::quaternionMsgToOgre(result.pose.pose.orientation));
 
-  bbox_->setPosition(rviz_common::pointMsgToOgre(detection.bbox.center.position));
+  auto bbox_offset = rviz_common::pointMsgToOgre(detection.bbox.center.position);
+  bbox_->setPosition(bbox_offset);
   bbox_->setOrientation(rviz_common::quaternionMsgToOgre(detection.bbox.center.orientation));
-  bbox_->setScale(rviz_common::vector3MsgToOgre(detection.bbox.size));
 
-  covariance_->setPosition(bbox_->getPosition());
-  covariance_->setOrientation(bbox_->getOrientation());
+  auto bbox_scale = rviz_common::vector3MsgToOgre(detection.bbox.size);
+  bbox_->setScale(bbox_scale);
+
   covariance_->setCovariance(
     rviz_common::quaternionMsgToOgre(result.pose.pose.orientation), result.pose.covariance);
+
+  // project on local height axis (ROS z is OGRE x)
+  auto bbox_scale_along_height = bbox_scale.dotProduct(Ogre::Vector3::UNIT_X) / 2.0;
+  auto bbox_offset_along_height = bbox_offset.dotProduct(Ogre::Vector3::UNIT_X) / 2.0;
+  id_text_->setLocalTranslation(height_axis * (bbox_scale_along_height + bbox_offset_along_height + ID_TEXT_OFFSET));
+
+  if (detection.id.empty()) {
+    id_text_->setCaption("");
+    setShowId(false);
+  } else {
+    id_text_->setCaption("#" + detection.id);
+  }
 }
 
 } // namespace vision_rviz_plugins

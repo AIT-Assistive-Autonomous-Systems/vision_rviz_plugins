@@ -25,6 +25,7 @@ namespace rviz_common
 {
 namespace properties
 {
+class BoolProperty;
 class ColorProperty;
 class FloatProperty;
 class CovarianceProperty;
@@ -51,6 +52,7 @@ private Q_SLOTS:
   void updateAxisGeometry();
   void updateColorAndAlpha();
   void updateCovariance();
+  void updateShowId();
 
 private:
   void processMessage(vision_msgs::msg::Detection3DArray::ConstSharedPtr message) override;
@@ -62,6 +64,7 @@ private:
   rviz_common::properties::CovarianceProperty * covariance_property_;
   rviz_common::properties::FloatProperty * axes_length_property_;
   rviz_common::properties::FloatProperty * axes_radius_property_;
+  rviz_common::properties::BoolProperty * show_id_property_;
 };
 
 }  // namespace vision_rviz_plugins

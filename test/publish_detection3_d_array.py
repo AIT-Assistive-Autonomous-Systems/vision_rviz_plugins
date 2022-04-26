@@ -18,6 +18,7 @@ limitations under the License.
 import math
 import sys
 import rclpy
+from random import random
 from rclpy.node import Node
 from rclpy.time import CONVERSION_CONSTANT
 from tf2_ros.transform_broadcaster import TransformBroadcaster
@@ -26,9 +27,10 @@ from vision_msgs.msg import Detection3DArray, Detection3D, ObjectHypothesisWithP
 
 
 MAX_NO_OF_DETECTIONS = 3
-DETECTION_COUNT_PERIOD = 5.0
+DETECTION_COUNT_PERIOD = 10.0
 TF_PUBLISH_PERIOD = 0.2
-TF_RANGE = 1.0
+TF_RANGE = 2.0
+DETECTION_DISTANCE = 1.5
 DETECTION_PUBLISH_PERIOD = 0.1
 POS_STDDEV = 0.5
 ROT_STDDEV = 0.05
@@ -51,6 +53,10 @@ class Detection3DArrayPublisher(Node):
         self._pub_detections = self.create_publisher(Detection3DArray, 'detections', 1)
         self._detections_timer = self.create_timer(DETECTION_PUBLISH_PERIOD, self._on_detections)
 
+        self._x_scale = [(random() - 0.5) * 0.8 for _ in range(MAX_NO_OF_DETECTIONS)]
+        self._y_scale = [(random() - 0.5) * 0.8 for _ in range(MAX_NO_OF_DETECTIONS)]
+        self._z_scale = [(random() - 0.5) * 0.8 for _ in range(MAX_NO_OF_DETECTIONS)]
+
     def _on_tf(self):
         t = self.get_clock().now()
 
@@ -62,6 +68,8 @@ class Detection3DArrayPublisher(Node):
         t_s = t.nanoseconds / CONVERSION_CONSTANT
         tf.transform.translation.x = math.cos(t_s) * TF_RANGE
         tf.transform.translation.y = math.sin(t_s) * TF_RANGE
+        tf.transform.rotation.y = 0.707002
+        tf.transform.rotation.w = 0.707002
         self._tf_broadcaster.sendTransform(tf)
 
     def _on_detections(self):
@@ -76,15 +84,16 @@ class Detection3DArrayPublisher(Node):
         no_of_det = int(round(math.fabs(MAX_NO_OF_DETECTIONS * timed_scale)))
         for i in range(no_of_det):
             d = Detection3D()
-            d.id = f'd{i}'
-            d.bbox.size.x = 1.0
-            d.bbox.size.y = 0.5
-            d.bbox.size.z = 0.2
+            if i > 0:
+                # publish first without id, to test text visibility in the plugin
+                d.id = f'd{i}'
+            d.bbox.size.x = 1.0 + self._x_scale[i]
+            d.bbox.size.y = 1.0 + self._y_scale[i]
+            d.bbox.size.z = 1.0 + self._z_scale[i]
             h = ObjectHypothesisWithPose()
             h.hypothesis.class_id = '1'
             h.hypothesis.score = 1.0
-            h.pose.pose.position.x = math.cos(t_s) * i
-            h.pose.pose.position.y = math.sin(t_s) * i
+            h.pose.pose.position.z = math.cos(t_s) * i * DETECTION_DISTANCE
             h.pose.covariance[COV_POS_X_IDX] = POS_STDDEV * POS_STDDEV
             h.pose.covariance[COV_POS_Y_IDX] = POS_STDDEV * POS_STDDEV
             h.pose.covariance[COV_POS_Z_IDX] = POS_STDDEV * POS_STDDEV

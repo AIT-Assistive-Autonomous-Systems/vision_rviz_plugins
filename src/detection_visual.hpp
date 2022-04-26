@@ -18,6 +18,7 @@ limitations under the License. */
 #include <OgreSceneNode.h>
 #include "vision_msgs/msg/detection3_d_array.hpp"
 #include "rviz_rendering/objects/axes.hpp"
+#include "rviz_rendering/objects/movable_text.hpp"
 #include "rviz_rendering/objects/shape.hpp"
 #include "rviz_rendering/objects/covariance_visual.hpp"
 
@@ -32,6 +33,7 @@ private:
 
   std::unique_ptr<rviz_rendering::Shape> bbox_;
   std::unique_ptr<rviz_rendering::Axes> axes_;
+  std::unique_ptr<rviz_rendering::MovableText> id_text_;
   std::unique_ptr<rviz_rendering::CovarianceVisual> covariance_;
 
 public:
@@ -47,7 +49,11 @@ public:
 
   rviz_rendering::CovarianceVisual & covariance();
 
-  void update(const vision_msgs::msg::Detection3D &);
+  void setColor(Ogre::ColourValue color);
+
+  void setShowId(bool show);
+
+  void update(const vision_msgs::msg::Detection3D &, Ogre::Vector3 height_axis);
 };
 
 } // namespace vision_rviz_plugins

@@ -48,6 +48,10 @@ Detection3DArrayDisplay::Detection3DArrayDisplay()
   covariance_property_ = new rviz_common::properties::CovarianceProperty(
     "Covariance", true, "Whether or not the covariances of the messages should be shown.",
     this, SLOT(updateCovariance()));
+
+  show_id_property_ = new rviz_common::properties::BoolProperty(
+    "Show ID", true, "Whether or not the ids of objects are displayed as text.",
+    this, SLOT(updateShowId()));
 }
 
 Detection3DArrayDisplay::~Detection3DArrayDisplay() = default;
@@ -73,7 +77,7 @@ void Detection3DArrayDisplay::updateColorAndAlpha()
   Ogre::ColourValue color = color_property_->getOgreColor();
   color.a = alpha_property_->getFloat();
   for (auto & visual : detection_visuals_) {
-    visual.bbox().setColor(color);
+    visual.setColor(color);
   }
   context_->queueRender();
 }
@@ -82,6 +86,14 @@ void Detection3DArrayDisplay::updateCovariance()
 {
   for (auto & visual : detection_visuals_) {
     visual.covariance().updateUserData(covariance_property_->getUserData());
+  }
+  context_->queueRender();
+}
+
+void Detection3DArrayDisplay::updateShowId()
+{
+  for (auto & visual : detection_visuals_) {
+    visual.setShowId(show_id_property_->getBool());
   }
   context_->queueRender();
 }
@@ -133,6 +145,8 @@ void Detection3DArrayDisplay::processMessage(Detection3DArray::ConstSharedPtr me
   scene_node_->setPosition(position);
   scene_node_->setOrientation(orientation);
 
+  auto fixed_frame_height_axis = orientation * Ogre::Vector3::UNIT_Y;
+
   if (message->detections.size() < detection_visuals_.size()) {
     auto it = detection_visuals_.begin();
     std::advance(it, message->detections.size());
@@ -148,12 +162,13 @@ void Detection3DArrayDisplay::processMessage(Detection3DArray::ConstSharedPtr me
   for (auto vi = detection_visuals_.begin();
     vi != detection_visuals_.end(); ++vi, ++di)
   {
-    vi->update(*di);
+    vi->update(*di, fixed_frame_height_axis);
   }
 
   updateColorAndAlpha();
   updateCovariance();
   updateAxisGeometry();
+  updateShowId();
 }
 
 void Detection3DArrayDisplay::reset()
