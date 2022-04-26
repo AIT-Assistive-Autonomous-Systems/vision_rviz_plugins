@@ -5,4 +5,10 @@
         </description>
         <message_type>vision_msgs/msg/Detection3DArray</message_type>
     </class>
+    <class name="vision_rviz_plugins/CameraInfo" type="vision_rviz_plugins::CameraInfoDisplay" base_class_type="rviz_common::Display">
+        <description>
+            Display view frustum of CameraInfo.
+        </description>
+        <message_type>sensor_msgs/msg/CameraInfo</message_type>
+    </class>
 </library>

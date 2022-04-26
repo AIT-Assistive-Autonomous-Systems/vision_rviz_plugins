@@ -1,0 +1,26 @@
+header:
+  stamp:
+    sec: 0
+    nanosec: 0
+  frame_id: test_optical_frame
+height: 1024
+width: 768
+
+distortion_model: plumb_bob
+
+k: [1024.0, 0, 512.0, 0.0, 768.0, 384.0, 0.0, 0.0, 1.0]
+
+# leave other matrices empty as the plugin doesnt use them
+d: [0.0, 0.0, 0.0, 0.0, 0.0]
+r: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+p: [0.0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+binning_x: 0
+binning_y: 0
+
+roi:
+  x_offset: 0
+  y_offset: 0
+  height: 0
+  width: 0
+  do_rectify: False

@@ -21,6 +21,9 @@ find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets)
 add_library(vision_rviz_plugins SHARED
   src/detection3_d_array_display.cpp
   src/detection3_d_array_display.hpp
+  src/camera_info_display.cpp
+  src/camera_info_display.hpp
+  src/camera_info_visual.cpp
   src/detection_visual.cpp)
 
 set_property(TARGET vision_rviz_plugins PROPERTY AUTOMOC ON)
@@ -34,6 +37,7 @@ ament_target_dependencies(
   "pluginlib"
   "rviz_common"
   "rviz_rendering"
+  "sensor_msgs"
   "vision_msgs"
 )
 target_link_libraries(vision_rviz_plugins Qt5::Core Qt5::Gui Qt5::Widgets)
