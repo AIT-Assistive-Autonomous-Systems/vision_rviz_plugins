@@ -17,6 +17,7 @@ limitations under the License. */
 #include "rviz_common/properties/float_property.hpp"
 #include "rviz_common/properties/covariance_property.hpp"
 #include "rviz_common/validate_floats.hpp"
+#include "rviz_rendering/mesh_loader.hpp"
 
 namespace vision_rviz_plugins
 {
@@ -52,6 +53,10 @@ Detection3DArrayDisplay::Detection3DArrayDisplay()
   show_id_property_ = new rviz_common::properties::BoolProperty(
     "Show ID", true, "Whether or not the ids of objects are displayed as text.",
     this, SLOT(updateShowId()));
+
+  mesh_property_ = new rviz_common::properties::StringProperty(
+    "Mesh", "", "Mesh resource to display at every detection.",
+    this, SLOT(updateMesh()));
 }
 
 Detection3DArrayDisplay::~Detection3DArrayDisplay() = default;
@@ -65,7 +70,7 @@ void Detection3DArrayDisplay::onInitialize()
 void Detection3DArrayDisplay::updateAxisGeometry()
 {
   for (auto & visual : detection_visuals_) {
-    visual.axes().set(
+    visual.setAxes(
       axes_length_property_->getFloat(),
       axes_radius_property_->getFloat());
   }
@@ -96,6 +101,31 @@ void Detection3DArrayDisplay::updateShowId()
     visual.setShowId(show_id_property_->getBool());
   }
   context_->queueRender();
+}
+
+void Detection3DArrayDisplay::updateMesh()
+{
+  auto mesh = mesh_property_->getStdString();
+  if (mesh.empty()) {
+    meshes_by_class_id_.clear();
+  } else {
+    try {
+      rviz_rendering::loadMeshFromResource(mesh);
+      setStatus(StatusProperty::Ok, "Mesh", "OK");
+    } catch (Ogre::Exception & e) {
+      auto msg = "Failed to load mesh " + mesh;
+      setStatus(StatusProperty::Error, "Mesh", QString::fromStdString(msg));
+    }
+  }
+  // TODO(ZeilingerM) use class_id mapping defined by Display properties (#2)
+  auto class_id = "mesh_class_id";
+  meshes_by_class_id_.emplace(class_id, mesh);
+  for (auto & visual : detection_visuals_) {
+    auto it = meshes_by_class_id_.find(class_id);
+    if (it != meshes_by_class_id_.end()) {
+      visual.setMesh(it->second);
+    }
+  }
 }
 
 void Detection3DArrayDisplay::processMessage(Detection3DArray::ConstSharedPtr message)
@@ -169,6 +199,7 @@ void Detection3DArrayDisplay::processMessage(Detection3DArray::ConstSharedPtr me
   updateCovariance();
   updateAxisGeometry();
   updateShowId();
+  updateMesh();
 }
 
 void Detection3DArrayDisplay::reset()

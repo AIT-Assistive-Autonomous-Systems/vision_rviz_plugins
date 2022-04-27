@@ -24,7 +24,8 @@ add_library(vision_rviz_plugins SHARED
   src/camera_info_display.cpp
   src/camera_info_display.hpp
   src/camera_info_visual.cpp
-  src/detection_visual.cpp)
+  src/detection_visual.cpp
+  src/mesh_shape.cpp)
 
 set_property(TARGET vision_rviz_plugins PROPERTY AUTOMOC ON)
 

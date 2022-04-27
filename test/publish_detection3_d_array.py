@@ -34,6 +34,8 @@ DETECTION_DISTANCE = 1.5
 DETECTION_PUBLISH_PERIOD = 0.1
 POS_STDDEV = 0.5
 ROT_STDDEV = 0.05
+SCALE_NOISE_AMPLITUDE = 0.1
+BASE_SCALE = 0.5
 
 
 COV_POS_X_IDX = 6 * 0 + 0
@@ -53,9 +55,9 @@ class Detection3DArrayPublisher(Node):
         self._pub_detections = self.create_publisher(Detection3DArray, 'detections', 1)
         self._detections_timer = self.create_timer(DETECTION_PUBLISH_PERIOD, self._on_detections)
 
-        self._x_scale = [(random() - 0.5) * 0.8 for _ in range(MAX_NO_OF_DETECTIONS)]
-        self._y_scale = [(random() - 0.5) * 0.8 for _ in range(MAX_NO_OF_DETECTIONS)]
-        self._z_scale = [(random() - 0.5) * 0.8 for _ in range(MAX_NO_OF_DETECTIONS)]
+        self._x_scale = [(random() - 0.5) * SCALE_NOISE_AMPLITUDE for _ in range(MAX_NO_OF_DETECTIONS)]
+        self._y_scale = [(random() - 0.5) * SCALE_NOISE_AMPLITUDE for _ in range(MAX_NO_OF_DETECTIONS)]
+        self._z_scale = [(random() - 0.5) * SCALE_NOISE_AMPLITUDE for _ in range(MAX_NO_OF_DETECTIONS)]
 
     def _on_tf(self):
         t = self.get_clock().now()
@@ -87,9 +89,9 @@ class Detection3DArrayPublisher(Node):
             if i > 0:
                 # publish first without id, to test text visibility in the plugin
                 d.id = f'd{i}'
-            d.bbox.size.x = 1.0 + self._x_scale[i]
-            d.bbox.size.y = 1.0 + self._y_scale[i]
-            d.bbox.size.z = 1.0 + self._z_scale[i]
+            d.bbox.size.x = BASE_SCALE + self._x_scale[i]
+            d.bbox.size.y = BASE_SCALE + self._y_scale[i]
+            d.bbox.size.z = BASE_SCALE + self._z_scale[i]
             h = ObjectHypothesisWithPose()
             h.hypothesis.class_id = '1'
             h.hypothesis.score = 1.0

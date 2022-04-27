@@ -15,8 +15,12 @@ limitations under the License. */
 #include "detection_visual.hpp"
 #include "rviz_common/msg_conversions.hpp"
 #include <rcpputils/asserts.hpp>
+#include <string>
 #include <utility>
 #include <memory>
+
+#include <OgreSceneNode.h>
+#include <OgreSceneManager.h>
 
 namespace vision_rviz_plugins
 {
@@ -33,9 +37,10 @@ DetectionVisual::DetectionVisual(
 : scene_manager_(scene_manager), parent_scene_node_(parent_scene_node)
 {
   scene_node_ = parent_scene_node_->createChildSceneNode();
+  bbox_node_ = scene_node_->createChildSceneNode();
   bbox_ = std::make_unique<Shape>(
     Shape::Type::Cube, scene_manager_,
-    scene_node_->createChildSceneNode());
+    bbox_node_);
   axes_ = std::make_unique<Axes>(
     scene_manager_,
     scene_node_->createChildSceneNode());
@@ -56,9 +61,9 @@ DetectionVisual::~DetectionVisual()
   }
 }
 
-rviz_rendering::Axes & DetectionVisual::axes()
+void DetectionVisual::setAxes(double length, double radius)
 {
-  return *axes_;
+  axes_->set(length, radius);
 }
 
 rviz_rendering::Shape & DetectionVisual::bbox()
@@ -74,6 +79,9 @@ rviz_rendering::CovarianceVisual & DetectionVisual::covariance()
 void DetectionVisual::setColor(Ogre::ColourValue color)
 {
   bbox_->setColor(color);
+  if (mesh_) {
+    mesh_->setColor(color);
+  }
   color.a = 1.0; // force text alpha to opaque
   id_text_->setColor(color);
 }
@@ -84,6 +92,16 @@ void DetectionVisual::setShowId(bool show)
     show = false;
   }
   id_text_->setVisible(show);
+}
+
+void DetectionVisual::setMesh(const std::string & mesh)
+{
+  if (mesh.empty()) {
+    mesh_.reset();
+  } else {
+    mesh_ = std::make_unique<MeshShape>(mesh, scene_manager_, scene_node_->createChildSceneNode());
+    assert(mesh_);
+  }
 }
 
 void DetectionVisual::update(
@@ -109,7 +127,9 @@ void DetectionVisual::update(
   // project on local height axis (ROS z is OGRE x)
   auto bbox_scale_along_height = bbox_scale.dotProduct(Ogre::Vector3::UNIT_X) / 2.0;
   auto bbox_offset_along_height = bbox_offset.dotProduct(Ogre::Vector3::UNIT_X) / 2.0;
-  id_text_->setLocalTranslation(height_axis * (bbox_scale_along_height + bbox_offset_along_height + ID_TEXT_OFFSET));
+  id_text_->setLocalTranslation(
+    height_axis *
+    (bbox_scale_along_height + bbox_offset_along_height + ID_TEXT_OFFSET));
 
   if (detection.id.empty()) {
     id_text_->setCaption("");
@@ -117,6 +137,9 @@ void DetectionVisual::update(
   } else {
     id_text_->setCaption("#" + detection.id);
   }
+
+  // render bbox or mesh exclusively
+  bbox_node_->setVisible(!mesh_);
 }
 
 } // namespace vision_rviz_plugins
