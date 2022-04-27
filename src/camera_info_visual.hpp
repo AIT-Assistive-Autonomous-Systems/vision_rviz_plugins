@@ -35,7 +35,7 @@ private:
 
   static std::atomic_uint64_t unique_ids_;
 
-  double fx_, fy_;
+  double x_scale_, y_scale_;
   double far_distance_;
 
   void generateMesh();

@@ -75,6 +75,18 @@ void CameraInfoDisplay::processMessage(CameraInfo::ConstSharedPtr message)
       "Message contained invalid floating point values (nans or infs) in camera matrix");
     return;
   }
+  if (0.0 >= message->k[3 * 0 + 0]) {
+    setStatus(
+      StatusProperty::Error, "Topic",
+      "fx is non-positive, can't determine view frustum");
+    return;
+  }
+  if (0.0 >= message->k[3 * 1 + 1]) {
+    setStatus(
+      StatusProperty::Error, "Topic",
+      "fy is non-positive, can't determine view frustum");
+    return;
+  }
 
   Ogre::Vector3 position;
   Ogre::Quaternion orientation;

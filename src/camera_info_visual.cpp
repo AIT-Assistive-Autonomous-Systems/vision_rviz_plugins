@@ -30,7 +30,7 @@ std::atomic_uint64_t CameraInfoVisual::unique_ids_ = 0;
 CameraInfoVisual::CameraInfoVisual(
   Ogre::SceneManager * scene_manager,
   Ogre::SceneNode * parent_scene_node)
-: scene_manager_(scene_manager), parent_scene_node_(parent_scene_node), fx_(0.0), fy_(0.0),
+: scene_manager_(scene_manager), parent_scene_node_(parent_scene_node), x_scale_(0.0), y_scale_(0.0),
   far_distance_(0.0)
 {
   auto inc_id = unique_ids_.fetch_add(1);
@@ -76,7 +76,7 @@ void CameraInfoVisual::generateMesh()
 {
   object_->clear();
 
-  if (fx_ == 0.0 || fy_ == 0.0 || far_distance_ == 0.0) {
+  if (x_scale_ == 0.0 || y_scale_ == 0.0 || far_distance_ == 0.0) {
     return;
   }
 
@@ -86,11 +86,8 @@ void CameraInfoVisual::generateMesh()
   object_->position(0, 0, 0);
 
   // far plane
-
-  auto far_width = far_distance_ * 1.0 / fx_;
-  auto far_height = far_distance_ * 1.0 / fy_;
-
-  // real farHeight = 2 * tan(fovRadians / 2) * farDistance;
+  auto far_width = far_distance_ * x_scale_;
+  auto far_height = far_distance_ * y_scale_;
 
   // top left
   object_->position(-far_width / 2.0, -far_height / 2.0, far_distance_);
@@ -117,12 +114,16 @@ void CameraInfoVisual::generateMesh()
 
 void CameraInfoVisual::update(CameraInfo::ConstSharedPtr camera_info)
 {
-  auto new_fx = camera_info->width / camera_info->k[3 * 0 + 0];
-  auto new_fy = camera_info->height / camera_info->k[3 * 1 + 1];
+  auto fx = camera_info->k[3 * 0 + 0];
+  auto fy = camera_info->k[3 * 1 + 1];
+  assert (fx > 0.0 && fy > 0.0);
 
-  if (fx_ != new_fx || fy_ != new_fy) {
-    fx_ = new_fx;
-    fy_ = new_fy;
+  auto new_x_scale = camera_info->width / fx;
+  auto new_y_scale = camera_info->height / fy;
+
+  if (x_scale_ != new_x_scale || y_scale_ != new_y_scale) {
+    x_scale_ = new_x_scale;
+    y_scale_ = new_y_scale;
     generateMesh();
   }
 }
