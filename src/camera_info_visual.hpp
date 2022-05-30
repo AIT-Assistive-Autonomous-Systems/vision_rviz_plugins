@@ -16,12 +16,10 @@ limitations under the License. */
 
 #include <memory>
 #include <OgreSceneNode.h>
-#include "sensor_msgs/msg/camera_info.hpp"
+#include <image_geometry/pinhole_camera_model.h>
 
 namespace vision_rviz_plugins
 {
-
-using sensor_msgs::msg::CameraInfo;
 
 class CameraInfoVisual
 {
@@ -50,7 +48,7 @@ public:
   
   void setFarDistance(double d);
 
-  void update(CameraInfo::ConstSharedPtr);
+  void update(const image_geometry::PinholeCameraModel&);
 };
 
 } // namespace vision_rviz_plugins

@@ -30,7 +30,8 @@ std::atomic_uint64_t CameraInfoVisual::unique_ids_ = 0;
 CameraInfoVisual::CameraInfoVisual(
   Ogre::SceneManager * scene_manager,
   Ogre::SceneNode * parent_scene_node)
-: scene_manager_(scene_manager), parent_scene_node_(parent_scene_node), x_scale_(0.0), y_scale_(0.0),
+: scene_manager_(scene_manager), parent_scene_node_(parent_scene_node), x_scale_(0.0),
+  y_scale_(0.0),
   far_distance_(0.0)
 {
   auto inc_id = unique_ids_.fetch_add(1);
@@ -112,14 +113,12 @@ void CameraInfoVisual::generateMesh()
   object_->end();
 }
 
-void CameraInfoVisual::update(CameraInfo::ConstSharedPtr camera_info)
+void CameraInfoVisual::update(const image_geometry::PinholeCameraModel & camera)
 {
-  auto fx = camera_info->k[3 * 0 + 0];
-  auto fy = camera_info->k[3 * 1 + 1];
-  assert (fx > 0.0 && fy > 0.0);
+  assert(camera.fx() > 0.0 && camera.fy() > 0.0);
 
-  auto new_x_scale = camera_info->width / fx;
-  auto new_y_scale = camera_info->height / fy;
+  auto new_x_scale = camera.reducedResolution().width / camera.fx();
+  auto new_y_scale = camera.reducedResolution().height / camera.fy();
 
   if (x_scale_ != new_x_scale || y_scale_ != new_y_scale) {
     x_scale_ = new_x_scale;

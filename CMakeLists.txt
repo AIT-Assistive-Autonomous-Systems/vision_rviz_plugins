@@ -15,6 +15,7 @@ find_package(pluginlib REQUIRED)
 find_package(rviz_common REQUIRED)
 find_package(rviz_rendering REQUIRED)
 find_package(vision_msgs REQUIRED)
+find_package(image_geometry REQUIRED)
 
 find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets)
 
@@ -40,6 +41,7 @@ ament_target_dependencies(
   "rviz_rendering"
   "sensor_msgs"
   "vision_msgs"
+  "image_geometry"
 )
 target_link_libraries(vision_rviz_plugins Qt5::Core Qt5::Gui Qt5::Widgets)
 

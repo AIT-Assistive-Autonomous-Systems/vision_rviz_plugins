@@ -7,6 +7,7 @@ Panels:
         - /Global Options1
         - /Detection3DArray1
         - /CameraInfo1
+        - /CameraInfo ROI1
       Splitter Ratio: 0.5
     Tree Height: 787
   - Class: rviz_common/Selection
@@ -71,6 +72,7 @@ Visualization Manager:
           Value: true
         Value: false
       Enabled: true
+      Mesh: ""
       Name: Detection3DArray
       Show ID: true
       Topic:
@@ -94,6 +96,20 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /camera_info
+      Value: true
+    - Alpha: 1
+      Class: vision_rviz_plugins/CameraInfo
+      Color: 196; 160; 0
+      Enabled: true
+      Far Distance: 5.5
+      Name: CameraInfo ROI
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /camera_info_roi
       Value: true
   Enabled: true
   Global Options:

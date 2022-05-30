@@ -17,8 +17,8 @@ binning_x: 0
 binning_y: 0
 
 roi:
-  x_offset: 0
-  y_offset: 0
-  height: 0
-  width: 0
-  do_rectify: False
+  x_offset: 256
+  y_offset: 192
+  width: 768
+  height: 576
+  do_rectify: True

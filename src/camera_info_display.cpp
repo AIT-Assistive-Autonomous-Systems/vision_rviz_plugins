@@ -105,7 +105,10 @@ void CameraInfoDisplay::processMessage(CameraInfo::ConstSharedPtr message)
 
   updateColorAndAlpha();
   updateFarDistance();
-  visual_->update(message);
+
+  image_geometry::PinholeCameraModel camera_model;
+  camera_model.fromCameraInfo(message);
+  visual_->update(camera_model);
 }
 
 void CameraInfoDisplay::reset()
