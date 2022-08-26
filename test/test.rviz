@@ -51,11 +51,35 @@ Visualization Manager:
       Radius: 0.10000000149011612
       Reference Frame: <Fixed Frame>
       Value: true
-    - Alpha: 1
+    - Class: rviz_default_plugins/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: false
+        map:
+          Value: true
+        sensor:
+          Value: false
+        test_optical_frame:
+          Value: true
+      Marker Scale: 1
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: false
+      Tree:
+        map:
+          sensor:
+            {}
+          test_optical_frame:
+            {}
+      Update Interval: 0
+      Value: true
+    - Alpha: 0.5
       Axes Length: 0.5
       Axes Radius: 0.05000000074505806
       Class: vision_rviz_plugins/Detection3DArray
-      Color: 52; 101; 164
+      Color: 204; 0; 0
       Covariance:
         Orientation:
           Alpha: 0.5
@@ -87,7 +111,7 @@ Visualization Manager:
       Class: vision_rviz_plugins/CameraInfo
       Color: 52; 101; 164
       Enabled: true
-      Far Distance: 5.5
+      Far Distance: 8
       Name: CameraInfo
       Topic:
         Depth: 5
@@ -157,25 +181,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 9.963473320007324
+      Distance: 12.107982635498047
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.9687420129776001
-        Y: -0.03436660394072533
-        Z: 0.341065913438797
+        X: -1.8191719055175781
+        Y: -2.889969825744629
+        Z: 1.2903348207473755
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.5897986888885498
+      Pitch: 0.5147983431816101
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz_default_plugins)
-      Yaw: 1.9955226182937622
+      Yaw: 2.412329912185669
     Saved: ~
 Window Geometry:
   Displays:

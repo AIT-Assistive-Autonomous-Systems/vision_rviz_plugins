@@ -29,26 +29,30 @@ private:
   Ogre::SceneNode * scene_node_;
 
   Ogre::ManualObject * object_;
-  Ogre::MaterialPtr material_;
+  Ogre::MaterialPtr wireframe_material;
+  Ogre::MaterialPtr fill_material_;
 
   static std::atomic_uint64_t unique_ids_;
 
   double x_scale_, y_scale_;
   double far_distance_;
 
-  void generateMesh();
+  void addFrustumPositions(Ogre::ManualObject * object);
+  void generateWireframe(Ogre::ManualObject * object);
+  void generateFill(Ogre::ManualObject * object);
+  void generateObjects();
 
 public:
   CameraInfoVisual(
     Ogre::SceneManager *, Ogre::SceneNode * parent_scene_node);
 
   virtual ~CameraInfoVisual();
-  
+
   void setColor(Ogre::ColourValue);
-  
+
   void setFarDistance(double d);
 
-  void update(const image_geometry::PinholeCameraModel&);
+  void update(const image_geometry::PinholeCameraModel &);
 };
 
 } // namespace vision_rviz_plugins

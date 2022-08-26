@@ -30,11 +30,13 @@ MAX_NO_OF_DETECTIONS = 3
 DETECTION_COUNT_PERIOD = 10.0
 TF_PUBLISH_PERIOD = 0.2
 TF_RANGE = 2.0
-DETECTION_DISTANCE = 1.5
+DETECTION_DISTANCE = 3.0
 DETECTION_PUBLISH_PERIOD = 0.1
 POS_STDDEV = 0.5
 ROT_STDDEV = 0.05
-SCALE_NOISE_AMPLITUDE = 0.1
+SCALE_NOISE_AMPLITUDE_X = 0.3
+SCALE_NOISE_AMPLITUDE_Y = 1.0
+SCALE_NOISE_AMPLITUDE_Z = 1.0
 BASE_SCALE = 0.5
 
 
@@ -55,9 +57,9 @@ class Detection3DArrayPublisher(Node):
         self._pub_detections = self.create_publisher(Detection3DArray, 'detections', 1)
         self._detections_timer = self.create_timer(DETECTION_PUBLISH_PERIOD, self._on_detections)
 
-        self._x_scale = [(random() - 0.5) * SCALE_NOISE_AMPLITUDE for _ in range(MAX_NO_OF_DETECTIONS)]
-        self._y_scale = [(random() - 0.5) * SCALE_NOISE_AMPLITUDE for _ in range(MAX_NO_OF_DETECTIONS)]
-        self._z_scale = [(random() - 0.5) * SCALE_NOISE_AMPLITUDE for _ in range(MAX_NO_OF_DETECTIONS)]
+        self._x_scale = [(random() - 0.5) * SCALE_NOISE_AMPLITUDE_X for _ in range(MAX_NO_OF_DETECTIONS)]
+        self._y_scale = [(random() - 0.5) * SCALE_NOISE_AMPLITUDE_Y for _ in range(MAX_NO_OF_DETECTIONS)]
+        self._z_scale = [(random() - 0.5) * SCALE_NOISE_AMPLITUDE_Z for _ in range(MAX_NO_OF_DETECTIONS)]
 
     def _on_tf(self):
         t = self.get_clock().now()
@@ -81,9 +83,11 @@ class Detection3DArrayPublisher(Node):
         msg.header.stamp = t.to_msg()
 
         t_s = t.nanoseconds / CONVERSION_CONSTANT
-        timed_scale = math.sin(t_s / DETECTION_COUNT_PERIOD * math.tau)
-        # publish varying number of detections to test dis- and reappearing visuals
-        no_of_det = int(round(math.fabs(MAX_NO_OF_DETECTIONS * timed_scale)))
+        no_of_det = MAX_NO_OF_DETECTIONS
+        if DETECTION_COUNT_PERIOD:
+            timed_scale = math.sin(t_s / DETECTION_COUNT_PERIOD * math.tau)
+            # publish varying number of detections to test dis- and reappearing visuals
+            no_of_det = int(round(math.fabs(MAX_NO_OF_DETECTIONS * timed_scale)))
         for i in range(no_of_det):
             d = Detection3D()
             if i > 0:
@@ -96,6 +100,8 @@ class Detection3DArrayPublisher(Node):
             h.hypothesis.class_id = '1'
             h.hypothesis.score = 1.0
             h.pose.pose.position.z = math.cos(t_s) * i * DETECTION_DISTANCE
+            h.pose.pose.orientation.x = math.cos(t_s) * i * DETECTION_DISTANCE
+            h.pose.pose.orientation.w = 1 - h.pose.pose.orientation.x
             h.pose.covariance[COV_POS_X_IDX] = POS_STDDEV * POS_STDDEV
             h.pose.covariance[COV_POS_Y_IDX] = POS_STDDEV * POS_STDDEV
             h.pose.covariance[COV_POS_Z_IDX] = POS_STDDEV * POS_STDDEV

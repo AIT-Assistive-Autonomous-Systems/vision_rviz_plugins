@@ -27,6 +27,8 @@ using Ogre::ColourValue;
 
 std::atomic_uint64_t CameraInfoVisual::unique_ids_ = 0;
 
+const float fill_alpha_scale = 0.2;
+
 CameraInfoVisual::CameraInfoVisual(
   Ogre::SceneManager * scene_manager,
   Ogre::SceneNode * parent_scene_node)
@@ -35,15 +37,17 @@ CameraInfoVisual::CameraInfoVisual(
   far_distance_(0.0)
 {
   auto inc_id = unique_ids_.fetch_add(1);
-  auto id = "graph_rviz_plugins_camera_info/" + std::to_string(inc_id);
-  object_ = scene_manager_->createManualObject(id);
-  scene_node_ = parent_scene_node_->createChildSceneNode();
-  scene_node_->attachObject(object_);
 
-  material_ = rviz_rendering::MaterialManager::createMaterialWithNoLighting(id);
-  material_->setLightingEnabled(true);
-  material_->setReceiveShadows(false);
-  setColor(ColourValue(1.0, 0.0, 0.0, 1.0));
+  scene_node_ = parent_scene_node_->createChildSceneNode();
+
+  auto wireframe_id = "graph_rviz_plugins_camera_info/wireframe" + std::to_string(inc_id);
+  object_ = scene_manager_->createManualObject(wireframe_id);
+  scene_node_->attachObject(object_);
+  wireframe_material = rviz_rendering::MaterialManager::createMaterialWithLighting(wireframe_id);
+
+  auto fill_id = "graph_rviz_plugins_camera_info/fill" + std::to_string(inc_id);
+  fill_material_ = rviz_rendering::MaterialManager::createMaterialWithLighting(fill_id);
+  fill_material_->setCullingMode(Ogre::CULL_NONE);
 }
 
 CameraInfoVisual::~CameraInfoVisual()
@@ -59,58 +63,83 @@ CameraInfoVisual::~CameraInfoVisual()
 
 void CameraInfoVisual::setColor(ColourValue color)
 {
-  rviz_rendering::MaterialManager::enableAlphaBlending(material_, color.a);
-  material_->setAmbient(color * 0.5f);
-  material_->setDiffuse(color);
-  material_->setSelfIllumination(color);
+  rviz_rendering::MaterialManager::enableAlphaBlending(wireframe_material, color.a);
+  wireframe_material->setAmbient(color * 0.5f);
+  wireframe_material->setDiffuse(color);
+  wireframe_material->setSelfIllumination(color);
+
+  color.a *= fill_alpha_scale;
+  rviz_rendering::MaterialManager::enableAlphaBlending(fill_material_, color.a);
+  fill_material_->setAmbient(color * 0.5f);
+  fill_material_->setDiffuse(color);
+  fill_material_->setSelfIllumination(color);
 }
 
 void CameraInfoVisual::setFarDistance(double d)
 {
   if (far_distance_ != d) {
     far_distance_ = d;
-    generateMesh();
+    generateObjects();
   }
 }
 
-void CameraInfoVisual::generateMesh()
+void CameraInfoVisual::addFrustumPositions(Ogre::ManualObject * object)
 {
-  object_->clear();
-
-  if (x_scale_ == 0.0 || y_scale_ == 0.0 || far_distance_ == 0.0) {
-    return;
-  }
-
-  object_->begin(material_->getName(), Ogre::RenderOperation::OT_LINE_LIST, "rviz_rendering");
-
   // near plane (single projection center)
-  object_->position(0, 0, 0);
+  object->position(0, 0, 0);
 
   // far plane
   auto far_width = far_distance_ * x_scale_;
   auto far_height = far_distance_ * y_scale_;
 
   // top left
-  object_->position(-far_width / 2.0, -far_height / 2.0, far_distance_);
+  object->position(-far_width / 2.0, -far_height / 2.0, far_distance_);
   // top right
-  object_->position(+far_width / 2.0, -far_height / 2.0, far_distance_);
+  object->position(+far_width / 2.0, -far_height / 2.0, far_distance_);
   // bottom right
-  object_->position(+far_width / 2.0, +far_height / 2.0, far_distance_);
+  object->position(+far_width / 2.0, +far_height / 2.0, far_distance_);
   // bottom left
-  object_->position(-far_width / 2.0, +far_height / 2.0, far_distance_);
+  object->position(-far_width / 2.0, +far_height / 2.0, far_distance_);
+}
 
-  // viewing directions
+void CameraInfoVisual::generateWireframe(Ogre::ManualObject * object)
+{
+  object->begin(wireframe_material->getName(), Ogre::RenderOperation::OT_LINE_LIST, "rviz_rendering");
+  addFrustumPositions(object);
+  // viewing direction lines
   for (size_t i = 0; i < 4; i++) {
-    object_->index(0);
-    object_->index(1 + i);
+    object->index(0);
+    object->index(1 + i);
   }
+  // far plane rectangle
+  for (size_t i = 0; i < 4; i++) {
+    object->index(1 + i);
+    object->index(1 + ((i + 1) % 4));
+  }
+  object->end();
+}
 
-  // far plane polygon
+void CameraInfoVisual::generateFill(Ogre::ManualObject * object)
+{
+  object->begin(
+    fill_material_->getName(), Ogre::RenderOperation::OT_TRIANGLE_LIST, "rviz_rendering");
+  addFrustumPositions(object);
   for (size_t i = 0; i < 4; i++) {
-    object_->index(1 + i);
-    object_->index(1 + ((i + 1) % 4));
+    object->index(0);
+    object->index(1 + ((i + 1) % 4));
+    object->index(1 + ((i) % 4));
   }
-  object_->end();
+  object->end();
+}
+
+void CameraInfoVisual::generateObjects()
+{
+  object_->clear();
+  if (x_scale_ == 0.0 || y_scale_ == 0.0 || far_distance_ == 0.0) {
+    return;
+  }
+  generateFill(object_);
+  generateWireframe(object_);
 }
 
 void CameraInfoVisual::update(const image_geometry::PinholeCameraModel & camera)
@@ -123,7 +152,7 @@ void CameraInfoVisual::update(const image_geometry::PinholeCameraModel & camera)
   if (x_scale_ != new_x_scale || y_scale_ != new_y_scale) {
     x_scale_ = new_x_scale;
     y_scale_ = new_y_scale;
-    generateMesh();
+    generateObjects();
   }
 }
 
