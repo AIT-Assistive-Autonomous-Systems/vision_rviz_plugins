@@ -94,13 +94,12 @@ void DetectionVisual::setShowId(bool show)
   id_text_->setVisible(show);
 }
 
-void DetectionVisual::setMesh(const std::string & mesh)
+void DetectionVisual::setMesh(const Ogre::MeshPtr & mesh)
 {
-  if (mesh.empty()) {
-    mesh_.reset();
-  } else {
+  if (mesh) {
     mesh_ = std::make_unique<MeshShape>(mesh, scene_manager_, scene_node_->createChildSceneNode());
-    assert(mesh_);
+  } else {
+    mesh_.reset();
   }
 }
 

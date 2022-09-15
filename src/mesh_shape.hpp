@@ -52,7 +52,10 @@ namespace vision_rviz_plugins
 class MeshShape
 {
 public:
-  MeshShape(std::string entity_name, Ogre::SceneManager * scene_manager, Ogre::SceneNode * parent_node = NULL);
+  MeshShape(
+    const Ogre::MeshPtr & mesh,
+    Ogre::SceneManager * scene_manager,
+    Ogre::SceneNode * parent_node = NULL);
 
   virtual ~MeshShape();
 
@@ -70,4 +73,3 @@ protected:
 };
 
 }  // namespace vision_rviz_plugins
-

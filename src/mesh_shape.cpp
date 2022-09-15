@@ -52,15 +52,14 @@ using rviz_rendering::Shape;
 using rviz_rendering::MaterialManager;
 
 MeshShape::MeshShape(
-  std::string mesh,
+  const Ogre::MeshPtr& mesh,
   Ogre::SceneManager * scene_manager,
   Ogre::SceneNode * parent_node)
 : scene_manager_(scene_manager), parent_node_(parent_node)
 {
   static uint32_t count = 0;
   std::string entity_name = "MeshShape" + std::to_string(count++);
-  entity_ = scene_manager_->createEntity(
-    entity_name, mesh, "rviz_rendering");
+  entity_ = scene_manager_->createEntity(entity_name, mesh);
   assert(entity_);
 
   if (!parent_node_) {

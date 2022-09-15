@@ -1,4 +1,4 @@
-/* Copyright 2021 Austrian Institute of Technology GmbH
+/* Copyright 2022 Austrian Institute of Technology GmbH
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -57,6 +57,8 @@ Detection3DArrayDisplay::Detection3DArrayDisplay()
   mesh_property_ = new rviz_common::properties::StringProperty(
     "Mesh", "", "Mesh resource to display at every detection.",
     this, SLOT(updateMesh()));
+
+  loaded_mesh_ = {"", nullptr};
 }
 
 Detection3DArrayDisplay::~Detection3DArrayDisplay() = default;
@@ -107,23 +109,13 @@ void Detection3DArrayDisplay::updateMesh()
 {
   auto mesh = mesh_property_->getStdString();
   if (mesh.empty()) {
-    meshes_by_class_id_.clear();
+    loaded_mesh_ = {"", nullptr};
   } else {
-    try {
-      rviz_rendering::loadMeshFromResource(mesh);
-      setStatus(StatusProperty::Ok, "Mesh", "OK");
-    } catch (Ogre::Exception & e) {
-      auto msg = "Failed to load mesh " + mesh;
-      setStatus(StatusProperty::Error, "Mesh", QString::fromStdString(msg));
+    if (loaded_mesh_.first != mesh) {
+      loaded_mesh_ = {mesh, rviz_rendering::loadMeshFromResource(mesh)};
     }
-  }
-  // TODO(ZeilingerM) use class_id mapping defined by Display properties (#2)
-  auto class_id = "mesh_class_id";
-  meshes_by_class_id_.emplace(class_id, mesh);
-  for (auto & visual : detection_visuals_) {
-    auto it = meshes_by_class_id_.find(class_id);
-    if (it != meshes_by_class_id_.end()) {
-      visual.setMesh(it->second);
+    for (auto & visual : detection_visuals_) {
+      visual.setMesh(loaded_mesh_.second);
     }
   }
 }
@@ -195,17 +187,27 @@ void Detection3DArrayDisplay::processMessage(Detection3DArray::ConstSharedPtr me
     vi->update(*di, fixed_frame_height_axis);
   }
 
-  updateColorAndAlpha();
+  updateMesh();
+  if (!loaded_mesh_.first.empty()) {
+    if (loaded_mesh_.second) {
+      setStatus(StatusProperty::Ok, "Mesh", "OK");
+    } else {
+      auto msg = "Failed to load mesh " + loaded_mesh_.first;
+      setStatus(StatusProperty::Error, "Mesh", QString::fromStdString(msg));
+    }
+  }
+
   updateCovariance();
   updateAxisGeometry();
   updateShowId();
-  updateMesh();
+  updateColorAndAlpha();
 }
 
 void Detection3DArrayDisplay::reset()
 {
   MFDClass::reset();
   detection_visuals_.clear();
+  loaded_mesh_ = {"", nullptr};
 }
 
 }  // namespace vision_rviz_plugins

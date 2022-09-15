@@ -57,7 +57,7 @@ public:
 
   void setShowId(bool show);
 
-  void setMesh(const std::string & mesh);
+  void setMesh(const Ogre::MeshPtr & mesh);
 
   void update(const vision_msgs::msg::Detection3D &, Ogre::Vector3 height_axis);
 };
